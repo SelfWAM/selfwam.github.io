@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1900" viewBox="0 0 1440 1900">
+  <rect width="1440" height="1900" fill="#fdfaf4"/>
+  <style>text{font-family:'Roboto Mono',monospace;fill:#171717}.muted{fill:#6b6b66}.rule{stroke:#1a1a1a;stroke-opacity:.15}.panel{fill:#fff;stroke:#1a1a1a;stroke-opacity:.14}</style>
+  <g transform="translate(120 84)">
+    <text font-size="13" font-weight="700" fill="#2c8db5">METHOD</text><text y="56" font-size="40" font-weight="600">Causal by construction.</text>
+    <text y="95" font-size="17" class="muted">Clean executed actions steer only the world branch; future targets never leak into the deployable action expert.</text>
+    <rect y="136" width="1200" height="462" rx="14" class="panel"/>
+    <image href="../static/assets/figures/architecture.png" x="20" y="152" width="1160" height="430" preserveAspectRatio="xMidYMid meet"/>
+  </g>
+  <line x1="120" x2="1320" y1="760" y2="760" class="rule"/>
+  <g transform="translate(120 830)">
+    <text font-size="13" font-weight="700" fill="#ee7a2f">VIDEO QUALITY · 275 SAMPLES</text><text y="55" font-size="36" font-weight="600">Better consequences, not just better pixels.</text>
+    <g transform="translate(0 100)">
+      <rect width="376" height="220" rx="12" class="panel"/><text x="28" y="42" class="muted" font-size="14">LPIPS ↓</text><text x="28" y="99" font-size="35">0.0636 → 0.0429</text><text x="28" y="157" fill="#3d6b35" font-size="24">−32.5%</text>
+      <rect x="412" width="376" height="220" rx="12" class="panel"/><text x="440" y="42" class="muted" font-size="14">PSNR ↑</text><text x="440" y="99" font-size="35">29.24 → 32.79</text><text x="440" y="157" fill="#3d6b35" font-size="24">+3.55 dB</text>
+      <rect x="824" width="376" height="220" rx="12" class="panel"/><text x="852" y="42" class="muted" font-size="14">FVD-I3D ↓</text><text x="852" y="99" font-size="35">45.92 → 34.55</text><text x="852" y="157" fill="#3d6b35" font-size="24">−24.8%</text>
+    </g>
+  </g>
+  <g transform="translate(120 1230)">
+    <text font-size="13" font-weight="700" fill="#7257a3">EFFICIENCY</text><text y="55" font-size="36" font-weight="600">The fast path stays fast.</text>
+    <g transform="translate(0 100)">
+      <text y="28" font-size="15">ACTION ONLY</text><rect x="220" width="824" height="28" fill="#ddd"/><rect x="220" y="40" width="832" height="28" fill="#3d6b35"/><text x="1068" y="22" font-size="14">320.7 ms</text><text x="1076" y="63" font-size="14">323.9 ms</text>
+      <text y="136" font-size="15">ACTION + VIDEO</text><rect x="220" y="108" width="810" height="28" fill="#ddd"/><rect x="220" y="148" width="821" height="28" fill="#7257a3"/><text x="1046" y="130" font-size="14">668.4 ms</text><text x="1057" y="171" font-size="14">677.5 ms</text>
+      <text y="235" font-size="15">PEAK MEMORY</text><text x="220" y="235" font-size="30">13.959 GiB = 13.959 GiB</text>
+    </g>
+  </g>
+  <line x1="120" x2="1320" y1="1580" y2="1580" class="rule"/>
+  <g transform="translate(120 1640)">
+    <text font-size="13" font-weight="700" fill="#3d6b35">COUNTERFACTUAL ROLLOUTS</text>
+    <text y="55" font-size="36" font-weight="600">Move the action; the predicted body follows.</text>
+    <text y="103" font-size="16" class="muted">Perturbation and interpolation studies reveal action-dependent RGB and self-mask futures.</text>
+    <rect y="146" width="1200" height="1" fill="#171717" opacity=".15"/>
+    <text y="200" font-size="14">ABSTRACT · CITATION · SOURCE</text><text x="1200" y="200" text-anchor="end" font-size="14">SelfWAM · Anonymous research project</text>
+  </g>
+</svg>

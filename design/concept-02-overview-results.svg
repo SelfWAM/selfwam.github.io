@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1600" viewBox="0 0 1440 1600">
+  <rect width="1440" height="1600" fill="#fdfaf4"/>
+  <style>text{font-family:'Roboto Mono',monospace;fill:#171717}.muted{fill:#6b6b66}.rule{stroke:#1a1a1a;stroke-opacity:.15}</style>
+  <g transform="translate(120 86)">
+    <text font-size="13" font-weight="700" fill="#7257a3">OVERVIEW</text>
+    <text y="56" font-size="40" font-weight="600">From passive observer to embodied actor.</text>
+    <text y="96" font-size="17" class="muted">Executed actions condition future RGB and robot self-mask prediction, while the fast policy path remains isolated.</text>
+    <rect y="142" width="1200" height="676" rx="14" fill="#fff" stroke="#1a1a1a" stroke-opacity=".14"/>
+    <image href="../static/assets/figures/overview.png" x="18" y="160" width="1164" height="640" preserveAspectRatio="xMidYMid meet"/>
+    <text y="870" font-size="14" class="muted">Figure 1 · SelfWAM overview and action-scale sensitivity.</text>
+  </g>
+  <line x1="120" x2="1320" y1="1010" y2="1010" class="rule"/>
+  <g transform="translate(120 1086)">
+    <text font-size="13" font-weight="700" fill="#3d6b35">ROBOTWIN 2.0</text>
+    <text y="55" font-size="40" font-weight="600">Policy performance</text>
+    <text x="1200" y="55" text-anchor="end" font-size="16" class="muted">Success rate (%) · values shown above every bar</text>
+    <g transform="translate(0 120)">
+      <line x1="0" x2="1200" y1="300" y2="300" class="rule"/>
+      <line x1="0" x2="1200" y1="225" y2="225" class="rule"/>
+      <line x1="0" x2="1200" y1="150" y2="150" class="rule"/>
+      <line x1="0" x2="1200" y1="75" y2="75" class="rule"/>
+      <g fill="#8cae7c"><rect x="52" y="102" width="44" height="198"/><rect x="212" y="52" width="44" height="248"/><rect x="372" y="34" width="44" height="266"/><rect x="532" y="41" width="44" height="259"/><rect x="692" y="51" width="44" height="249"/><rect x="852" y="25" width="44" height="275"/><rect x="1012" y="23" width="44" height="277"/></g>
+      <g fill="#7257a3"><rect x="100" y="125" width="44" height="175"/><rect x="260" y="70" width="44" height="230"/><rect x="420" y="39" width="44" height="261"/><rect x="580" y="45" width="44" height="255"/><rect x="740" y="46" width="44" height="254"/><rect x="900" y="24" width="44" height="276"/><rect x="1060" y="21" width="44" height="279"/></g>
+      <g font-size="12" text-anchor="middle"><text x="98" y="330">π0</text><text x="258" y="330">π0.5</text><text x="418" y="330">Motus</text><text x="578" y="330">GigaWorld</text><text x="738" y="330">Policy only</text><text x="898" y="330">FastWAM</text><text x="1058" y="330" font-weight="700">SelfWAM</text></g>
+      <g font-size="11" text-anchor="middle"><text x="74" y="92">65.92</text><text x="122" y="115">58.40</text><text x="1034" y="13">92.16</text><text x="1082" y="11">93.08</text></g>
+    </g>
+  </g>
+</svg>

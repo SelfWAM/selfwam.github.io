@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SelfWAM — Self-Grounded Unified World Action Model</title>
+<meta name="description" content="SelfWAM grounds future prediction in the action a robot actually executes, producing action-sensitive visual consequences without slowing the deployable policy." />
+<meta name="citation_title" content="SelfWAM: A Self-Grounded Unified World Action Model for Fast Robot Control" />
+<meta name="citation_author" content="Bikang Pan" />
+<meta name="citation_author" content="Fan Liu" />
+<meta name="citation_author" content="Haotao Lu" />
+<meta name="citation_author" content="Jingya Wang" />
+<meta name="citation_author" content="Ye Shi" />
+<meta name="citation_publication_date" content="2026/08/01" />
+<meta name="citation_arxiv_id" content="2608.00725" />
+<meta name="citation_pdf_url" content="https://arxiv.org/pdf/2608.00725" />
+<link rel="icon" type="image/svg+xml" href="static/images/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="static/css/site.css" />
+</head>
+<body>
+
+<!-- ============================================================= NAV -->
+<nav class="nav">
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="SelfWAM home"><span class="mark" aria-hidden="true"></span> SELFWAM</a>
+    <div class="crumb">PROJECT <span style="color:#bbb">/</span> <b>RESEARCH</b></div>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+    </button>
+    <div class="nav-links" id="site-nav">
+      <a href="#action">Action</a>
+      <a href="#method">Method</a>
+      <a href="#robotwin">RoboTwin</a>
+      <a href="#video">Video</a>
+      <a href="#worldarena">WorldArena</a>
+      <a href="#efficiency">Efficiency</a>
+      <a href="#cite">Citation</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================= HERO -->
+<header class="hero" id="top">
+  <div class="wrap">
+    <p class="eyebrow">Research project <span class="dot">·</span> <b>World Action Models</b></p>
+    <h1>Self<span class="accent">WAM</span></h1>
+    <p class="subtitle">A self-grounded, unified World Action Model for fast robot control.</p>
+    <div class="publication-authors" aria-label="Authors and affiliations">
+      <div class="author-list">
+        <span>Bikang Pan<sup>1,2,*</sup></span>
+        <span>Fan Liu<sup>1,2,*</sup></span>
+        <span>Haotao Lu<sup>1,2</sup></span>
+        <span>Jingya Wang<sup>1</sup></span>
+        <span>Ye Shi<sup>1,2</sup></span>
+      </div>
+      <div class="affiliation-list">
+        <span class="institution"><sup>1</sup>ShanghaiTech University</span>
+        <span class="institution"><sup>2</sup>InstAdapt</span>
+        <span class="contribution"><sup>*</sup>Equal contribution</span>
+      </div>
+    </div>
+    <p class="abstract">
+      World Action Models can strengthen robot policies by learning actions and future observations
+      together. But when future prediction sees only the task and current observation, it may learn a
+      <em>generic continuation</em> instead of the consequences of the action actually taken. SelfWAM
+      adds a clean-action path that conditions future RGB and robot self-mask prediction on the
+      demonstrated action chunk. The result is <b>unified consequence modeling</b> with the
+      same lightweight action expert preserved for fast, action-only control.
+    </p>
+
+    <div class="btn-row">
+      <a class="btn primary" href="#action">Explore results <span class="arr">↓</span></a>
+      <a class="btn" href="https://arxiv.org/abs/2608.00725" target="_blank" rel="noopener">Paper <span class="arr">↗</span></a>
+      <a class="btn" href="https://github.com/SelfWAM/SelfWAM" target="_blank" rel="noopener">Code <span class="arr">↗</span></a>
+      <a class="btn" href="#cite">BibTeX <span class="arr">↘</span></a>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="num">92.6<span class="unit">%</span></div>
+        <div class="lbl">RoboTwin 2.0 avg. success<span class="sub">clean 92.2 · random 93.1</span></div>
+      </div>
+      <div class="stat">
+        <div class="num">32.5<span class="unit">%↓</span></div>
+        <div class="lbl">lower future-video LPIPS<span class="sub">vs. action-agnostic Fast-WAM</span></div>
+      </div>
+      <div class="stat">
+        <div class="num">+3.55<span class="unit">dB</span></div>
+        <div class="lbl">PSNR gain<span class="sub">on 275 future-video samples</span></div>
+      </div>
+      <div class="stat">
+        <div class="num">&lt;1<span class="unit">%</span></div>
+        <div class="lbl">added action-only latency<span class="sub">0% peak-memory increase</span></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- =================================================== ACTION-SENSITIVE -->
+<section id="action">
+  <div class="wrap">
+    <p class="eyebrow">01 <span class="dot">·</span> Headline result</p>
+    <h2 class="section-title">Action-Sensitive Futures</h2>
+    <p class="section-tag">Change the action. Change the future.</p>
+    <p class="lead">
+      We scale the executed action by <b>λ</b> and ask each world model to roll the future forward from
+      the head camera. <b>SelfWAM</b> follows the same hold-to-expert progression as the ground truth:
+      at <b>λ = 0</b> the arm stays still; at <b>λ = 1.0</b> it completes the expert motion. The
+      action-agnostic <b>Fast-WAM</b> baseline cannot reproduce this response—the future changes little
+      as the commanded action changes.
+    </p>
+
+    <div class="lambda-legend">
+      <span class="muted">Columns scale the executed action chunk by λ. Rows compare future RGB (head cam).</span>
+      <span class="key"><span class="sw gt"></span> Ground truth</span>
+      <span class="key"><span class="sw uncond"></span> Fast-WAM (uncond.)</span>
+      <span class="key"><span class="sw ours"></span> SelfWAM (ours)</span>
+    </div>
+
+    <!-- TASK 1 -->
+    <div class="task-block">
+      <p class="task-name">Task 01 <span class="muted">·</span> <b>Beat block with hammer</b></p>
+      <div class="as-grid">
+        <div class="corner"></div>
+        <div class="col-head"><span class="lam">λ = 0.00</span>HOLD</div>
+        <div class="col-head"><span class="lam">λ = 0.25</span>SLOW</div>
+        <div class="col-head"><span class="lam">λ = 0.75</span>MEDIUM</div>
+        <div class="col-head"><span class="lam">λ = 1.00</span>EXPERT</div>
+
+        <div class="row-head gt"><b>GROUND<br>TRUTH</b><span>future RGB</span></div>
+        <div class="as-cell gt"><video poster="static/assets/videos/actionsens/beat/gt_hold.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/gt_hold.mp4"></video></div>
+        <div class="as-cell gt"><video poster="static/assets/videos/actionsens/beat/gt_slow.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/gt_slow.mp4"></video></div>
+        <div class="as-cell gt"><video poster="static/assets/videos/actionsens/beat/gt_med.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/gt_med.mp4"></video></div>
+        <div class="as-cell gt"><video poster="static/assets/videos/actionsens/beat/gt_expert.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/gt_expert.mp4"></video></div>
+
+        <div class="row-head uncond"><b>FAST-WAM</b><span>uncond.</span></div>
+        <div class="as-cell uncond"><video poster="static/assets/videos/actionsens/beat/uncond_hold.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/uncond_hold.mp4"></video></div>
+        <div class="as-cell uncond"><video poster="static/assets/videos/actionsens/beat/uncond_slow.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/uncond_slow.mp4"></video></div>
+        <div class="as-cell uncond"><video poster="static/assets/videos/actionsens/beat/uncond_med.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/uncond_med.mp4"></video></div>
+        <div class="as-cell uncond"><video poster="static/assets/videos/actionsens/beat/uncond_expert.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/uncond_expert.mp4"></video></div>
+
+        <div class="row-head ours"><b>SELFWAM</b><span>predicted</span></div>
+        <div class="as-cell ours"><video poster="static/assets/videos/actionsens/beat/ours_hold.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/ours_hold.mp4"></video></div>
+        <div class="as-cell ours"><video poster="static/assets/videos/actionsens/beat/ours_slow.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/ours_slow.mp4"></video></div>
+        <div class="as-cell ours"><video poster="static/assets/videos/actionsens/beat/ours_med.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/ours_med.mp4"></video></div>
+        <div class="as-cell ours"><video poster="static/assets/videos/actionsens/beat/ours_expert.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/beat/ours_expert.mp4"></video></div>
+      </div>
+    </div>
+
+    <!-- TASK 2 -->
+    <div class="task-block">
+      <p class="task-name">Task 02 <span class="muted">·</span> <b>Adjust bottle</b></p>
+      <div class="as-grid">
+        <div class="corner"></div>
+        <div class="col-head"><span class="lam">λ = 0.00</span>HOLD</div>
+        <div class="col-head"><span class="lam">λ = 0.25</span>SLOW</div>
+        <div class="col-head"><span class="lam">λ = 0.75</span>MEDIUM</div>
+        <div class="col-head"><span class="lam">λ = 1.00</span>EXPERT</div>
+
+        <div class="row-head gt"><b>GROUND<br>TRUTH</b><span>future RGB</span></div>
+        <div class="as-cell gt"><video poster="static/assets/videos/actionsens/adjust/gt_hold.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/gt_hold.mp4"></video></div>
+        <div class="as-cell gt"><video poster="static/assets/videos/actionsens/adjust/gt_slow.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/gt_slow.mp4"></video></div>
+        <div class="as-cell gt"><video poster="static/assets/videos/actionsens/adjust/gt_med.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/gt_med.mp4"></video></div>
+        <div class="as-cell gt"><video poster="static/assets/videos/actionsens/adjust/gt_expert.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/gt_expert.mp4"></video></div>
+
+        <div class="row-head uncond"><b>FAST-WAM</b><span>uncond.</span></div>
+        <div class="as-cell uncond"><video poster="static/assets/videos/actionsens/adjust/uncond_hold.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/uncond_hold.mp4"></video></div>
+        <div class="as-cell uncond"><video poster="static/assets/videos/actionsens/adjust/uncond_slow.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/uncond_slow.mp4"></video></div>
+        <div class="as-cell uncond"><video poster="static/assets/videos/actionsens/adjust/uncond_med.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/uncond_med.mp4"></video></div>
+        <div class="as-cell uncond"><video poster="static/assets/videos/actionsens/adjust/uncond_expert.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/uncond_expert.mp4"></video></div>
+
+        <div class="row-head ours"><b>SELFWAM</b><span>predicted</span></div>
+        <div class="as-cell ours"><video poster="static/assets/videos/actionsens/adjust/ours_hold.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/ours_hold.mp4"></video></div>
+        <div class="as-cell ours"><video poster="static/assets/videos/actionsens/adjust/ours_slow.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/ours_slow.mp4"></video></div>
+        <div class="as-cell ours"><video poster="static/assets/videos/actionsens/adjust/ours_med.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/ours_med.mp4"></video></div>
+        <div class="as-cell ours"><video poster="static/assets/videos/actionsens/adjust/ours_expert.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/actionsens/adjust/ours_expert.mp4"></video></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= METHOD -->
+<section id="method">
+  <div class="wrap">
+    <p class="eyebrow">02 <span class="dot">·</span> Method</p>
+    <h2 class="section-title">How it works</h2>
+    <p class="section-tag">A modality-specialized Mixture-of-Transformers with deliberately separated information flow.</p>
+
+    <div class="fig method-figure">
+      <img class="method-diagram" src="static/assets/figures/overview-transparent.png" alt="SelfWAM overview" loading="lazy" />
+      <p class="fig cap method-caption"><b>Overview.</b> Compared with action-unconditioned video prediction, SelfWAM
+      shifts the model from a passive observer to an actor that predicts the visual consequences of its
+      own actions. Its predicted motion follows the same slow-to-fast progression as the ground truth
+      when the executed action is scaled (top). Given robot videos, trajectories and instructions, it
+      couples a lightweight action expert with a shared video backbone; the executed action conditions
+      the backbone to jointly predict future RGB and robot self-mask video. At deployment the video
+      branch is removed and the action expert runs alone for fast action-only inference.</p>
+    </div>
+
+    <div class="points">
+      <div class="point">
+        <div class="pn">→ 01</div>
+        <h3>Unified routing</h3>
+        <p>A clean copy of the executed action is routed <em>only</em> to future-video queries —
+        aligning predicted dynamics with the commanded control while staying hidden from the noisy
+        future-action path, so the policy cannot recover its target.</p>
+      </div>
+      <div class="point">
+        <div class="pn">→ 02</div>
+        <h3>Self-grounded masks</h3>
+        <p>The same backbone jointly generates RGB and robot self-mask video, redirecting learning
+        from background appearance toward the robot as the agent of change throughout the motion.</p>
+      </div>
+      <div class="point">
+        <div class="pn">→ 03</div>
+        <h3>Action-only deployment</h3>
+        <p>Once the current context is encoded, action denoising runs entirely through the lightweight
+        action expert — no video or mask experts in the loop — preserving fast closed-loop control.</p>
+      </div>
+    </div>
+
+    <div class="fig method-figure architecture-figure">
+      <img class="method-diagram" src="static/assets/figures/architecture-transparent.png" alt="SelfWAM architecture and attention design" loading="lazy" />
+      <p class="fig cap method-caption"><b>Architecture &amp; attention design.</b> Left: the MoT contains a video
+      backbone and a lightweight action expert coupled through mixed attention. Middle: during
+      training, clean executed-action tokens condition only future-video queries. Right: two inference
+      modes — fast control uses the action expert alone; optional rollout conditions the video backbone
+      on a supplied action to generate its visual consequences.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= ROBOTWIN -->
+<section id="robotwin">
+  <div class="wrap">
+    <p class="eyebrow">03 <span class="dot">·</span> Policy performance</p>
+    <h2 class="section-title">RoboTwin 2.0 success rate</h2>
+    <p class="section-tag">Bimanual manipulation across all tasks, clean and randomized scenes.</p>
+
+    <div class="chart-card">
+      <div class="row-spread" style="margin-bottom:6px">
+        <div class="chart-legend">
+          <span class="key"><span class="sw" style="background:#d6d1c3"></span> Baselines</span>
+          <span class="key"><span class="sw fw"></span> Fast-WAM</span>
+          <span class="key"><span class="sw ours"></span> SelfWAM (ours)</span>
+        </div>
+        <span class="muted" style="font-size:12px">light bar = Clean &nbsp;·&nbsp; dark bar = Random</span>
+      </div>
+
+      <div class="chart-scroll">
+      <div class="chart">
+        <div class="axis">
+          <div class="gridline" style="bottom:100%"><span>100</span></div>
+          <div class="gridline" style="bottom:75%"><span>75</span></div>
+          <div class="gridline" style="bottom:50%"><span>50</span></div>
+          <div class="gridline" style="bottom:25%"><span>25</span></div>
+
+          <div class="method-group">
+            <div class="pair">
+              <div class="bar b-base-l" style="height:65.92%"><span class="v">65.9</span></div>
+              <div class="bar b-base"   style="height:58.40%"><span class="v">58.4</span></div>
+            </div>
+          </div>
+          <div class="method-group">
+            <div class="pair">
+              <div class="bar b-base-l" style="height:82.74%"><span class="v">82.7</span></div>
+              <div class="bar b-base"   style="height:76.76%"><span class="v">76.8</span></div>
+            </div>
+          </div>
+          <div class="method-group">
+            <div class="pair">
+              <div class="bar b-base-l" style="height:88.66%"><span class="v">88.7</span></div>
+              <div class="bar b-base"   style="height:87.02%"><span class="v">87.0</span></div>
+            </div>
+          </div>
+          <div class="method-group">
+            <div class="pair">
+              <div class="bar b-base-l" style="height:86.36%"><span class="v">86.4</span></div>
+              <div class="bar b-base"   style="height:85.04%"><span class="v">85.0</span></div>
+            </div>
+          </div>
+          <div class="method-group">
+            <div class="pair">
+              <div class="bar b-base-l" style="height:82.76%"><span class="v">82.8</span></div>
+              <div class="bar b-base"   style="height:84.80%"><span class="v">84.8</span></div>
+            </div>
+          </div>
+          <div class="method-group">
+            <div class="pair">
+              <div class="bar b-fw-l" style="height:91.82%"><span class="v">91.8</span></div>
+              <div class="bar b-fw"   style="height:91.86%"><span class="v">91.9</span></div>
+            </div>
+          </div>
+          <div class="method-group">
+            <div class="pair">
+              <div class="bar b-ours-l" style="height:92.16%"><span class="v">92.2</span></div>
+              <div class="bar b-ours"   style="height:93.08%"><span class="v">93.1</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="axis chart-labels">
+          <div class="method-label">
+            <span>π<sub>0</sub></span>
+            <span class="method-average muted">avg 62.2</span>
+          </div>
+          <div class="method-label">
+            <span>π<sub>0.5</sub></span>
+            <span class="method-average muted">avg 79.8</span>
+          </div>
+          <div class="method-label">
+            <span>Motus</span>
+            <span class="method-average muted">avg 87.8</span>
+          </div>
+          <div class="method-label">
+            <span>GigaWorld</span>
+            <span class="method-average muted">avg 85.7</span>
+          </div>
+          <div class="method-label">
+            <span>Policy only</span>
+            <span class="method-average muted">avg 83.8</span>
+          </div>
+          <div class="method-label">
+            <span>Fast-WAM</span>
+            <span class="method-average muted">avg 91.8</span>
+          </div>
+          <div class="method-label hl">
+            <span>SelfWAM (ours)</span>
+            <span class="method-average">avg 92.6</span>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <div class="benchmark-case" aria-label="Open microwave policy rollout comparison">
+      <div class="case-heading">
+        <div>
+          <p class="case-kicker">Qualitative policy rollout</p>
+          <h3>Open microwave</h3>
+        </div>
+        <p>Same clean-scene episode and initial state · 2× playback</p>
+      </div>
+      <div class="outcome-grid">
+        <figure class="outcome-card fail">
+          <div class="outcome-media">
+            <video poster="static/assets/posters/open_microwave_fastwam_fail.jpg" class="loop-vid" muted loop playsinline preload="metadata" src="static/assets/videos/open_microwave_fastwam_fail.mp4" aria-label="Fast-WAM failed Open Microwave rollout"></video>
+            <span class="outcome-status">Fail</span>
+          </div>
+          <figcaption><b>Fast-WAM</b><span>The arm leaves the target while the door remains closed.</span></figcaption>
+        </figure>
+        <figure class="outcome-card success">
+          <div class="outcome-media">
+            <video poster="static/assets/posters/open_microwave_selfwam_success.jpg" class="loop-vid" muted loop playsinline preload="metadata" src="static/assets/videos/open_microwave_selfwam_success.mp4" aria-label="SelfWAM successful Open Microwave rollout"></video>
+            <span class="outcome-status">Success</span>
+          </div>
+          <figcaption><b>SelfWAM</b><span>The policy reaches the handle and opens the microwave door.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="callout">
+      SelfWAM reaches <b>92.6% average success</b> on RoboTwin 2.0. It preserves the strong policy
+      performance of Fast-WAM (91.8%) while adding unified world modeling, and improves
+      randomized-scene success from 91.9% to <b>93.1%</b>.
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="data">
+        <thead><tr><th>Method</th><th>Clean ↑</th><th>Random ↑</th><th>Average ↑</th></tr></thead>
+        <tbody>
+          <tr><td>π<sub>0</sub></td><td>65.92</td><td>58.40</td><td>62.16</td></tr>
+          <tr><td>π<sub>0.5</sub></td><td>82.74</td><td>76.76</td><td>79.75</td></tr>
+          <tr><td>Motus</td><td>88.66</td><td>87.02</td><td>87.84</td></tr>
+          <tr><td>GigaWorld-Policy</td><td>86.36</td><td>85.04</td><td>85.70</td></tr>
+          <tr><td>Policy only <span class="sub">†</span></td><td>82.76</td><td>84.80</td><td>83.78</td></tr>
+          <tr><td>Fast-WAM</td><td>91.82</td><td>91.86</td><td>91.84</td></tr>
+          <tr class="ours"><td>SelfWAM (ours)</td><td>92.16</td><td class="best">93.08</td><td class="best">92.62</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:10px">† Reported Fast-WAM variant without video co-training; success rates in %.</p>
+  </div>
+</section>
+
+<!-- ===================================================== VIDEO QUALITY -->
+<section id="video">
+  <div class="wrap">
+    <p class="eyebrow">04 <span class="dot">·</span> World-model video quality</p>
+    <h2 class="section-title">Future-video quality</h2>
+    <p class="section-tag">275 future-video clips with an identical backbone, isolating the effect of conditioning on the demonstrated action.</p>
+
+    <div class="mini-row">
+      <div class="mini">
+        <p class="mtitle">LPIPS ↓</p>
+        <div class="maxis">
+          <div class="mb m-fw"   style="height:100%"><span class="v">0.0636</span></div>
+          <div class="mb m-ours" style="height:67.5%"><span class="v">0.0429</span></div>
+        </div>
+        <div class="mlbls"><span>Fast-WAM</span><span>SelfWAM</span></div>
+      </div>
+      <div class="mini">
+        <p class="mtitle">PSNR ↑</p>
+        <div class="maxis">
+          <div class="mb m-fw"   style="height:89.2%"><span class="v">29.24</span></div>
+          <div class="mb m-ours" style="height:100%"><span class="v">32.79</span></div>
+        </div>
+        <div class="mlbls"><span>Fast-WAM</span><span>SelfWAM</span></div>
+      </div>
+      <div class="mini">
+        <p class="mtitle">FVD-I3D ↓</p>
+        <div class="maxis">
+          <div class="mb m-fw"   style="height:100%"><span class="v">45.92</span></div>
+          <div class="mb m-ours" style="height:75.2%"><span class="v">34.55</span></div>
+        </div>
+        <div class="mlbls"><span>Fast-WAM</span><span>SelfWAM</span></div>
+      </div>
+    </div>
+
+    <div class="gloss">
+      <dl class="g">
+        <div class="term-row"><dt>LPIPS</dt><dd>Learned Perceptual Image Patch Similarity — perceptual distance between predicted and ground-truth frames; lower means more faithful to the real future.</dd></div>
+        <div class="term-row"><dt>PSNR</dt><dd>Peak Signal-to-Noise Ratio — pixel-level reconstruction quality; higher means sharper, less noisy frames.</dd></div>
+        <div class="term-row"><dt>FVD-I3D</dt><dd>Fréchet Video Distance under an I3D feature extractor — distribution-level realism of the clip over time; lower means more realistic temporal dynamics.</dd></div>
+      </dl>
+    </div>
+
+    <div class="callout">
+      Conditioning on the executed action reduces mean LPIPS by <b>32.5%</b>, improves PSNR by
+      <b>3.55 dB</b>, and lowers FVD-I3D by <b>24.8%</b> relative to unconditioned Fast-WAM.
+    </div>
+
+    <div class="qvid">
+      <p class="task-name" style="margin-bottom:10px">Task <span class="muted">·</span> <b>Beat block with hammer</b> <span class="muted">— expert action λ = 1.0, future RGB rollout</span></p>
+      <video poster="static/assets/videos/quality/beat_expert_3row.jpg" class="loop-vid" muted loop playsinline preload="auto" src="static/assets/videos/quality/beat_expert_3row.mp4" aria-label="Ground truth, Fast-WAM, and SelfWAM future video comparison"></video>
+      <div class="qlbls">
+        <span class="b">Ground truth</span>
+        <span>Fast-WAM (uncond.)</span>
+        <span class="o">SelfWAM (action-cond.)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= WORLDARENA -->
+<section id="worldarena">
+  <div class="wrap">
+    <p class="eyebrow">05 <span class="dot">·</span> WorldArena consistency</p>
+    <h2 class="section-title">Action-following &amp; consistency</h2>
+    <p class="section-tag">Standard WorldArena protocol on generated future videos.</p>
+
+    <div class="callout">
+      Both unified variants achieve non-zero <b>Action Following</b>, while Fast-WAM
+      remains at <b>0.0000</b>. Full SelfWAM scores highest at <b>0.0184</b>, showing that its predicted
+      futures respond to the commanded action instead of replaying a generic continuation.
+    </div>
+
+    <div class="tbl-wrap">
+      <table class="data">
+        <thead><tr>
+          <th>Model</th><th>Action Following ↑</th><th>Subject Consistency ↑</th><th>Background Consistency ↑</th><th>Photometric Consistency ↑</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>Fast-WAM</td><td>0.0000</td><td>0.9138</td><td>0.9309</td><td>0.8126</td></tr>
+          <tr><td>SelfWAM w/o mask</td><td>0.0181</td><td>0.9321</td><td>0.9380</td><td class="best">1.5168</td></tr>
+          <tr class="ours"><td>SelfWAM (ours)</td><td class="best">0.0184</td><td class="best">0.9326</td><td class="best">0.9385</td><td>1.4361</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:12px;margin-top:10px">SelfWAM improves on Fast-WAM across action-following, subject and background consistency.</p>
+
+    <div class="gloss">
+      <dl class="g">
+        <div class="term-row"><dt>Action Following</dt><dd>Whether the generated future actually changes with the commanded action — the core action-sensitivity signal; higher means the model responds to the action instead of replaying a generic continuation.</dd></div>
+        <div class="term-row"><dt>Subject Consistency</dt><dd>The main subject (robot / manipulated object) preserves its appearance across generated frames.</dd></div>
+        <div class="term-row"><dt>Background Consistency</dt><dd>The static scene stays stable, with motion concentrated on the acting agent.</dd></div>
+        <div class="term-row"><dt>Photometric Consistency</dt><dd>Lighting, color and exposure remain coherent from frame to frame.</dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= EFFICIENCY -->
+<section id="efficiency">
+  <div class="wrap">
+    <p class="eyebrow">06 <span class="dot">·</span> Inference efficiency</p>
+    <h2 class="section-title">Fast action-only inference</h2>
+    <p class="section-tag">NVIDIA H200, 32-action window, 10 denoising steps, averaged over four runs after warm-up.</p>
+
+    <div class="eff-row">
+      <div class="eff">
+        <div class="et">Action only <span class="muted">(ms)</span></div>
+        <div class="ebars">
+          <div class="ebar e-fw"   style="height:99.0%"><span class="v">320.7</span></div>
+          <div class="ebar e-ours" style="height:100%"><span class="v">323.9</span></div>
+        </div>
+        <div class="elbls"><span>Fast-WAM</span><span>SelfWAM</span></div>
+        <div class="edelta">Only +0.97% latency</div>
+      </div>
+      <div class="eff">
+        <div class="et">Action + video <span class="muted">(ms)</span></div>
+        <div class="ebars">
+          <div class="ebar e-fw"   style="height:98.7%"><span class="v">668.4</span></div>
+          <div class="ebar e-ours" style="height:100%"><span class="v">677.5</span></div>
+        </div>
+        <div class="elbls"><span>Fast-WAM</span><span>SelfWAM</span></div>
+        <div class="edelta">Only +1.36% latency</div>
+      </div>
+      <div class="eff">
+        <div class="et">Peak memory <span class="muted">(GiB)</span></div>
+        <div class="ebars">
+          <div class="ebar e-fw"   style="height:100%"><span class="v">13.959</span></div>
+          <div class="ebar e-ours" style="height:100%"><span class="v">13.959</span></div>
+        </div>
+        <div class="elbls"><span>Fast-WAM</span><span>SelfWAM</span></div>
+        <div class="edelta">No additional memory</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      Clean-action conditioning adds <b>less than 1%</b> action-only latency and <b>1.36%</b> joint
+      latency, with <b>no measured increase in peak memory</b>. The heavier video branch stays outside
+      the iterative action-denoising path.
+    </div>
+  </div>
+</section>
+
+<!-- =================================================== COUNTERFACTUAL -->
+<section id="analysis">
+  <div class="wrap">
+    <p class="eyebrow">07 <span class="dot">·</span> Analysis</p>
+    <h2 class="section-title">Counterfactual rollouts</h2>
+    <p class="section-tag">Same observation, different candidate actions — SelfWAM imagines action-dependent futures for diagnosis.</p>
+
+    <div class="fig-stack">
+      <div class="fig">
+        <img src="static/assets/figures/action_pertub.png" alt="Action perturbation rollouts" loading="lazy" />
+        <p class="fig cap"><b>Action perturbation.</b> Candidate actions that differ in direction,
+        gripper command or temporal scale produce visibly different futures; object change begins near a
+        plausible contact region while unrelated background stays stable.</p>
+      </div>
+      <div class="fig">
+        <img src="static/assets/figures/action_interp.png" alt="Action interpolation rollouts" loading="lazy" />
+        <p class="fig cap"><b>Action interpolation.</b> SelfWAM predicts action-dependent future RGB
+        and robot self-masks, revealing whether object motion is spatially and temporally compatible
+        with the robot's own motion.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== REAL ROBOT -->
+<section id="realworld">
+  <div class="wrap">
+    <p class="eyebrow">08 <span class="dot">·</span> Physical evaluation</p>
+    <h2 class="section-title">Real-Robot Experiments</h2>
+    <p class="section-tag">Four complete manipulation trials on a physical dual-arm platform.</p>
+
+    <div class="real-rail" tabindex="0" aria-label="Real-robot experiment videos">
+      <figure class="real-card">
+        <div class="real-media">
+          <video poster="static/assets/videos/realworld/pick_cup.jpg" class="loop-vid real-video" muted loop playsinline preload="metadata" src="static/assets/videos/realworld/pick_cup.mp4" aria-label="Pick up the cup real-robot experiment"></video>
+        </div>
+        <figcaption><span>Task 01</span><b>Pick up the cup</b></figcaption>
+      </figure>
+
+      <figure class="real-card">
+        <div class="real-media">
+          <video poster="static/assets/videos/realworld/pick_mouse.jpg" class="loop-vid real-video" muted loop playsinline preload="metadata" src="static/assets/videos/realworld/pick_mouse.mp4" aria-label="Pick up the mouse real-robot experiment"></video>
+        </div>
+        <figcaption><span>Task 02</span><b>Pick up the mouse</b></figcaption>
+      </figure>
+
+      <figure class="real-card">
+        <div class="real-media">
+          <video poster="static/assets/videos/realworld/pick_pen.jpg" class="loop-vid real-video" muted loop playsinline preload="metadata" src="static/assets/videos/realworld/pick_pen.mp4" aria-label="Pick up the pen real-robot experiment"></video>
+        </div>
+        <figcaption><span>Task 03</span><b>Pick up the pen</b></figcaption>
+      </figure>
+
+      <figure class="real-card">
+        <div class="real-media">
+          <video poster="static/assets/videos/realworld/pick_paper_ball.jpg" class="loop-vid real-video" muted loop playsinline preload="metadata" src="static/assets/videos/realworld/pick_paper_ball.mp4" aria-label="Pick up the paper ball real-robot experiment"></video>
+        </div>
+        <figcaption><span>Task 04</span><b>Pick up the paper ball</b></figcaption>
+      </figure>
+    </div>
+    <div class="real-pager" aria-label="Real-robot experiment pages">
+      <button class="real-page-btn real-page-prev" type="button" aria-label="Previous experiment page" title="Previous page" disabled><span aria-hidden="true">&larr;</span></button>
+      <output class="real-page-count" aria-live="polite"><b class="real-page-current">01</b><span>/</span><span class="real-page-total">01</span></output>
+      <button class="real-page-btn real-page-next" type="button" aria-label="Next experiment page" title="Next page"><span aria-hidden="true">&rarr;</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= CITATION -->
+<section id="cite">
+  <div class="wrap">
+    <p class="eyebrow">09 <span class="dot">·</span> Citation</p>
+    <h2 class="section-title">Cite this work</h2>
+    <p class="section-tag" style="margin-bottom:24px">If SelfWAM is useful in your research, please consider citing our arXiv preprint.</p>
+    <pre class="bib" id="bib"><button class="copy-btn" onclick="copyBib(this)">copy</button>@misc{pan2026selfwam,
+  title   = {SelfWAM: A Self-Grounded Unified World
+             Action Model for Fast Robot Control},
+  author  = {Pan, Bikang and Liu, Fan and Lu, Haotao and
+             Wang, Jingya and Shi, Ye},
+  year    = {2026},
+  eprint  = {2608.00725},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url     = {https://arxiv.org/abs/2608.00725}
+}</pre>
+  </div>
+</section>
+
+<!-- =========================================================== FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="row-spread">
+      <span>SelfWAM <span class="muted">· Self-grounded World Action Model</span></span>
+    </div>
+  </div>
+</footer>
+
+<script src="static/js/site.js"></script>
+</body>
+</html>
